@@ -459,6 +459,14 @@
                 font-size: 0.95rem;
             }
         }
+
+        pre code {
+            white-space: pre-wrap !important;
+            /* break long lines */
+            word-break: break-word !important;
+            /* prevent overflow */
+            font-family: monospace !important;
+        }
     </style>
 </head>
 
@@ -531,28 +539,25 @@
         }
 
         function formatMessage(text) {
-            let processedText = text.replace(/```(\w*)\n([\s\S]*?)```/g, (match, language, code) => {
+            text = text.replace(/```(\w*)\n([\s\S]*?)```/g, (match, language, code) => {
                 language = language || 'plaintext';
-                const cleanedCode = escapeHtml(code.trim());
+                const cleanedCode = escapeHtml(code);
                 return `
-      <div class="code-block">
-        <div class="code-header">
-          <span class="code-language">${language}</span>
-          <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
-        </div>
-        <pre><code class="language-${language}">${cleanedCode}</code></pre>
-      </div>
-    `;
+        <div class="code-block">
+            <div class="code-header">
+                <span class="code-language">${language}</span>
+                <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+            </div>
+            <pre><code class="language-${language}">${cleanedCode}</code></pre>
+        </div>`;
             });
 
-            processedText = processedText
-                .replace(/`([^`]+)`/g, '<code>$1</code>')
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
-                .replace(/\n/g, '<br>');
+            text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            text = text.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
 
-            return processedText;
+            return text;
         }
 
         function copyCode(button) {
@@ -585,6 +590,7 @@
                         scrollToBottom();
                         setTimeout(typeNextChar, 10 + Math.random() * 10);
                     } else {
+                        element.innerHTML += '<br>'; // 👈 qo‘shamiz shu yerda
                         currentNodeIndex++;
                         currentCharIndex = 0;
                         typeNextChar();
