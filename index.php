@@ -444,12 +444,6 @@
                 font-size: 0.95rem;
             }
         }
-
-        pre code {
-            white-space: pre-wrap !important;
-            word-break: break-word !important;
-            font-family: monospace !important;
-        }
     </style>
 </head>
 
@@ -512,8 +506,8 @@
                         <div class="code-block">
                             <div class="code-header">
                                 <span class="code-language">${language}</span>
-                                <button class="copy-btn" onclick="copyCode(this)">
-                                    <i class="fas fa-copy"></i> Copy
+                                <button class="copy-btn" onclick="copyCode(event)">
+                                    <i class="far fa-clipboard"></i> Copy
                                 </button>
                             </div>
                             <pre><code class="language-${language}">${escapeHtml(code)}</code></pre>
@@ -529,14 +523,21 @@
             elements.chatBody.scrollTop = elements.chatBody.scrollHeight;
         };
 
-        const copyCode = button => {
-            const code = button.closest('.code-block').querySelector('code').textContent;
-            navigator.clipboard.writeText(code).then(() => {
-                const original = button.innerHTML;
-                button.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                setTimeout(() => { button.innerHTML = original; }, 2000);
-            }).catch(err => console.error('Copy failed:', err));
-        };
+        function copyCode(event) {
+            const button = event.target;
+            const code = button.closest(".code-container").querySelector("pre");
+
+            navigator.clipboard
+                .writeText(code.innerText)
+                .then(() => {
+                    button.innerHTML = '<i class="fas fa-clipboard-check"></i> Copied!';
+                    setTimeout(
+                        () => (button.innerHTML = '<i class="far fa-clipboard"></i> Copy'),
+                        2000
+                    );
+                })
+                .catch((err) => console.error("Copy failed:", err));
+        }
 
         const simulateTyping = (element, text) => {
             const formatted = formatMessage(text);
