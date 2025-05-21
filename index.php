@@ -4,43 +4,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Chat Interface</title>
+    <title>AI Chat Assistant</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Highlight.js CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs2015.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <style>
         /* ===== BASE STYLES ===== */
         :root {
-            --user-bg: #ffffff;
-            --ai-bg: #f7f7f8;
-            --text-primary: #343541;
-            --text-secondary: #6e6e80;
-            --border-color: #d9d9e3;
+            --primary-bg: #343541;
+            --message-ai-bg: #444654;
+            --message-user-bg: #343541;
+            --text-primary: #ececf1;
+            --text-secondary: #acacbe;
+            --border-color: #565869;
             --primary-color: #10a37f;
             --primary-hover: #0d8a6d;
             --error-color: #ef4146;
-            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-            --code-bg: #1e1e1e;
-            --code-text: #d4d4d4;
-            --code-border: #3c3c3c;
-            --line-numbers: #858585;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --user-bg: #343541;
-                --ai-bg: #444654;
-                --text-primary: #ececf1;
-                --text-secondary: #acacbe;
-                --border-color: #565869;
-                --primary-color: #10a37f;
-                --primary-hover: #0d8a6d;
-                --code-bg: #1e1e1e;
-                --code-text: #d4d4d4;
-                --code-border: #3c3c3c;
-                --line-numbers: #858585;
-            }
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.2);
+            --input-bg: #40414f;
+            --input-border: #565869;
+            --code-bg: #2b2b3a;
+            --code-header-bg: #363642;
+            --code-text: #f8f8f2;
+            --code-copy-hover: #4d4d5a;
         }
 
         * {
@@ -51,7 +38,7 @@
 
         body {
             font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-            background: var(--ai-bg);
+            background: var(--primary-bg);
             color: var(--text-primary);
             line-height: 1.6;
             height: 100vh;
@@ -63,38 +50,39 @@
         .chat-container {
             display: flex;
             flex-direction: column;
-            max-width: 900px;
             width: 100%;
             margin: 0 auto;
             height: 100vh;
-            background: var(--ai-bg);
+            max-width: 900px;
+            position: relative;
         }
 
         /* ===== HEADER ===== */
         .chat-header {
             padding: 16px;
             text-align: center;
-            border-bottom: 1px solid var(--border-color);
-            background: var(--user-bg);
+            background: var(--primary-bg);
             position: sticky;
             top: 0;
             z-index: 10;
             display: flex;
             align-items: center;
             justify-content: center;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .chat-header h1 {
             font-size: 1.2rem;
             font-weight: 600;
+            color: var(--text-primary);
         }
 
         /* ===== CHAT BODY ===== */
         .chat-body {
             flex: 1;
             overflow-y: auto;
-            padding: 16px 0;
             scroll-behavior: smooth;
+            padding-bottom: 100px;
         }
 
         .message-container {
@@ -107,68 +95,66 @@
         .message-row {
             display: flex;
             width: 100%;
-            padding: 16px 0;
+            padding: 24px 0;
             animation: messageAppear 0.3s ease-out;
         }
 
         .message-row.user {
-            background: var(--user-bg);
+            background: var(--message-user-bg);
         }
 
         .message-row.ai {
-            background: var(--ai-bg);
+            background: var(--message-ai-bg);
+        }
+
+        .message-row-center {
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            gap: 20px;
+            padding: 0 16px;
         }
 
         .message-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin: 0 16px;
+            width: 36px;
+            height: 36px;
+            border-radius: 2px;
             flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
             color: white;
+            margin-top: 4px;
         }
 
         .message-avatar.user {
-            background: #6e6e80;
+            background: #10a37f;
         }
 
         .message-avatar.ai {
-            background: var(--primary-color);
+            background: #6e6e80;
         }
 
         .message-content {
             flex: 1;
-            padding-right: 16px;
-            max-width: calc(100% - 72px);
         }
 
         .message-text {
             white-space: pre-wrap;
             word-wrap: break-word;
             line-height: 1.7;
-        }
-
-        /* User message specific styling */
-        .message-row.user .message-text {
-            color: var(--text-primary);
-        }
-
-        /* AI message specific styling */
-        .message-row.ai .message-text {
-            color: var(--text-primary);
+            font-size: 16px;
+            padding-right: 40px;
         }
 
         /* ===== CODE BLOCK STYLES ===== */
         .code-block {
             position: relative;
-            margin: 12px 0;
+            margin: 16px 0;
             background: var(--code-bg);
-            border: 1px solid var(--code-border);
-            border-radius: 6px;
+            border-radius: 8px;
             overflow: hidden;
             box-shadow: var(--shadow-sm);
         }
@@ -177,44 +163,46 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 12px;
-            background: rgba(0, 0, 0, 0.2);
-            color: var(--code-text);
+            padding: 8px 16px;
+            background: var(--code-header-bg);
+            color: var(--text-secondary);
             font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 0.85em;
-            border-bottom: 1px solid var(--code-border);
+            font-size: 14px;
         }
 
         .code-language {
-            font-weight: bold;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 12px;
         }
 
         .copy-btn {
             background: transparent;
             border: none;
-            color: var(--code-text);
+            color: var(--text-secondary);
             cursor: pointer;
-            font-size: 0.8em;
+            font-size: 13px;
             display: flex;
             align-items: center;
-            gap: 4px;
-            opacity: 0.8;
-            transition: opacity 0.2s;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
         }
 
         .copy-btn:hover {
-            opacity: 1;
+            background: var(--code-copy-hover);
         }
 
         .code-content {
             overflow-x: auto;
-            padding: 12px;
         }
 
         .code-content pre {
             margin: 0;
+            padding: 16px;
             font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 0.9em;
+            font-size: 14px;
             line-height: 1.5;
             color: var(--code-text);
         }
@@ -226,23 +214,27 @@
 
         /* Inline code styling */
         .message-text code:not(.hljs) {
-            background: rgba(0, 0, 0, 0.1);
+            background: rgba(0, 0, 0, 0.3);
             padding: 0.2em 0.4em;
-            border-radius: 3px;
-            font-family: 'Courier New', monospace;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Courier New', monospace;
             font-size: 0.9em;
-            color: var(--primary-color);
+            color: #eb5f5f;
         }
 
         /* ===== TYPING INDICATOR ===== */
         .typing-indicator {
             display: flex;
-            padding: 12px 16px;
+            padding: 16px;
             align-items: center;
-            background: var(--ai-bg);
+            background: var(--message-ai-bg);
             opacity: 0;
             transform: translateY(10px);
             transition: opacity 0.3s, transform 0.3s;
+            position: fixed;
+            bottom: 100px;
+            width: 100%;
+            max-width: 900px;
         }
 
         .typing-indicator.active {
@@ -253,6 +245,7 @@
         .typing-dots {
             display: flex;
             margin-left: 8px;
+            gap: 4px;
         }
 
         .typing-dot {
@@ -260,7 +253,6 @@
             height: 8px;
             border-radius: 50%;
             background-color: var(--text-secondary);
-            margin: 0 2px;
             animation: typingAnimation 1.4s infinite ease-in-out;
         }
 
@@ -279,23 +271,30 @@
         /* ===== CHAT FOOTER ===== */
         .chat-footer {
             padding: 16px;
-            border-top: 1px solid var(--border-color);
-            background: var(--user-bg);
-            position: sticky;
+            background: var(--primary-bg);
+            position: fixed;
             bottom: 0;
+            width: 100%;
+            max-width: 900px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .chat-form-container {
+            max-width: 900px;
+            margin: 0 auto;
         }
 
         .chat-form {
             display: flex;
             border-radius: 8px;
-            border: 1px solid var(--border-color);
-            background: var(--user-bg);
-            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            box-shadow: var(--shadow-md);
             transition: box-shadow 0.2s, border-color 0.2s;
         }
 
         .chat-form:focus-within {
-            box-shadow: var(--shadow-md);
+            box-shadow: 0 0 0 2px rgba(16, 163, 127, 0.3);
             border-color: var(--primary-color);
         }
 
@@ -310,7 +309,7 @@
             max-height: 200px;
             min-height: 60px;
             outline: none;
-            line-height: 1.6;
+            line-height: 1.5;
         }
 
         .chat-submit {
@@ -335,12 +334,13 @@
             flex-wrap: wrap;
             gap: 8px;
             margin-top: 16px;
+            justify-content: center;
         }
 
         .suggestion-btn {
-            background: var(--ai-bg);
+            background: rgba(64, 65, 79, 0.5);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
+            border-radius: 12px;
             padding: 8px 16px;
             font-size: 0.9rem;
             color: var(--text-primary);
@@ -349,9 +349,7 @@
         }
 
         .suggestion-btn:hover {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
+            background: var(--input-bg);
         }
 
         /* ===== ERROR MESSAGE ===== */
@@ -385,7 +383,7 @@
         }
 
         .message-text li {
-            margin-bottom: 0.25em;
+            margin-bottom: 0.5em;
         }
 
         /* ===== ANIMATIONS ===== */
@@ -399,7 +397,7 @@
             }
 
             30% {
-                transform: translateY(-5px);
+                transform: translateY(-4px);
                 opacity: 1;
             }
         }
@@ -441,19 +439,19 @@
 
         /* ===== RESPONSIVE ADJUSTMENTS ===== */
         @media (max-width: 768px) {
-            .chat-container {
-                height: 100vh;
-                max-width: 100%;
+            .message-row-center {
+                padding: 0 12px;
+                gap: 12px;
             }
 
             .message-avatar {
                 width: 32px;
                 height: 32px;
-                margin: 0 12px;
             }
 
-            .message-content {
-                max-width: calc(100% - 56px);
+            .message-text {
+                font-size: 15px;
+                padding-right: 16px;
             }
 
             .chat-input {
@@ -483,29 +481,25 @@
             </div>
         </div>
         <div class="chat-footer">
-            <form id="chatForm" class="chat-form">
-                <textarea class="chat-input" id="prompt" placeholder="Type your message..." rows="1"
-                    autocomplete="off"></textarea>
-                <button type="submit" class="chat-submit">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </form>
-            <div class="suggestions" id="suggestions">
-                <button class="suggestion-btn">Explain quantum computing</button>
-                <button class="suggestion-btn">Write a poem about AI</button>
-                <button class="suggestion-btn">How to make pizza dough?</button>
+            <div class="chat-form-container">
+                <form id="chatForm" class="chat-form">
+                    <textarea class="chat-input" id="prompt" placeholder="Message AI Assistant..." rows="1"
+                        autocomplete="off"></textarea>
+                    <button type="submit" class="chat-submit">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+                <div class="suggestions" id="suggestions">
+                    <button class="suggestion-btn">Explain quantum computing</button>
+                    <button class="suggestion-btn">Write a poem about AI</button>
+                    <button class="suggestion-btn">How to make pizza dough?</button>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Highlight.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/html.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/css.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/php.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
 
     <script>
         // DOM Elements
@@ -517,29 +511,112 @@
         const suggestionBtns = document.querySelectorAll('.suggestion-btn');
 
         // Auto-resize textarea
-        promptInput.addEventListener('input', function () {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
+        promptInput.addEventListener('input', () => {
+            promptInput.style.height = 'auto';
+            promptInput.style.height = `${promptInput.scrollHeight}px`;
         });
 
-        // Scroll to bottom of chat
         function scrollToBottom() {
             const chatBody = document.getElementById('chatBody');
             chatBody.scrollTop = chatBody.scrollHeight;
         }
 
-        // Add message to chat
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/\"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function formatMessage(text) {
+            let processedText = text.replace(/```(\w*)\n([\s\S]*?)```/g, (match, language, code) => {
+                language = language || 'plaintext';
+                const cleanedCode = escapeHtml(code.trim());
+                return `
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-language">${language}</span>
+          <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+        </div>
+        <pre><code class="language-${language}">${cleanedCode}</code></pre>
+      </div>
+    `;
+            });
+
+            processedText = processedText
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+                .replace(/\n/g, '<br>');
+
+            return processedText;
+        }
+
+        function copyCode(button) {
+            const codeBlock = button.closest('.code-block').querySelector('code');
+            navigator.clipboard.writeText(codeBlock.textContent).then(() => {
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => { button.innerHTML = originalText; }, 2000);
+            }).catch(err => console.error('Copy failed: ', err));
+        }
+
+        function simulateTyping(element, fullText) {
+            const formattedHTML = formatMessage(fullText);
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = formattedHTML;
+            const nodes = Array.from(tempDiv.childNodes);
+
+            let currentNodeIndex = 0;
+            let currentCharIndex = 0;
+            element.innerHTML = '';
+
+            function typeNextChar() {
+                if (currentNodeIndex >= nodes.length) return;
+                const node = nodes[currentNodeIndex];
+
+                if (node.nodeType === Node.TEXT_NODE) {
+                    const text = node.textContent;
+                    if (currentCharIndex < text.length) {
+                        element.innerHTML += text.charAt(currentCharIndex++);
+                        scrollToBottom();
+                        setTimeout(typeNextChar, 10 + Math.random() * 10);
+                    } else {
+                        currentNodeIndex++;
+                        currentCharIndex = 0;
+                        typeNextChar();
+                    }
+                } else {
+                    element.appendChild(node.cloneNode(true));
+                    currentNodeIndex++;
+                    currentCharIndex = 0;
+                    setTimeout(() => {
+                        hljs.highlightAll();
+                        scrollToBottom();
+                        typeNextChar();
+                    }, 20);
+                }
+            }
+
+            typeNextChar();
+        }
+
         function addMessage(content, isUser = false, isError = false) {
             const messageRow = document.createElement('div');
             messageRow.className = `message-row ${isUser ? 'user' : 'ai'}`;
 
-            const avatarDiv = document.createElement('div');
-            avatarDiv.className = `message-avatar ${isUser ? 'user' : 'ai'}`;
-            avatarDiv.textContent = isUser ? 'You' : 'AI';
+            const center = document.createElement('div');
+            center.className = 'message-row-center';
+
+            const avatar = document.createElement('div');
+            avatar.className = `message-avatar ${isUser ? 'user' : 'ai'}`;
+            avatar.textContent = isUser ? 'You' : 'AI';
 
             const contentDiv = document.createElement('div');
             contentDiv.className = 'message-content';
-
             const textDiv = document.createElement('div');
             textDiv.className = 'message-text';
 
@@ -553,138 +630,27 @@
                 contentDiv.appendChild(textDiv);
             }
 
-            messageRow.appendChild(avatarDiv);
-            messageRow.appendChild(contentDiv);
+            center.appendChild(avatar);
+            center.appendChild(contentDiv);
+            messageRow.appendChild(center);
             messageContainer.appendChild(messageRow);
 
             scrollToBottom();
 
-            if (!isError && !isUser) {
-                simulateTyping(textDiv, content);
-            }
+            if (!isError && !isUser) simulateTyping(textDiv, content);
         }
 
-        // Format message with markdown support including code blocks
-        function formatMessage(text) {
-            // First process code blocks
-            let processedText = text.replace(/```(\w*)\n([\s\S]*?)```/g, function(match, language, code) {
-                // Default to plaintext if no language specified
-                if (!language) language = 'plaintext';
-                
-                // Create code block HTML
-                return `
-                <div class="code-block">
-                    <div class="code-header">
-                        <span class="code-language">${language}</span>
-                        <button class="copy-btn" onclick="copyCode(this)">
-                            <i class="fas fa-copy"></i> Copy
-                        </button>
-                    </div>
-                    <div class="code-content">
-                        <pre><code class="language-${language}">${escapeHtml(code)}</code></pre>
-                    </div>
-                </div>
-                `;
-            });
-            
-            // Then process inline code
-            processedText = processedText.replace(/`([^`]+)`/g, '<code>$1</code>');
-            
-            // Process other markdown
-            processedText = processedText
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // bold
-                .replace(/\*(.*?)\*/g, '<em>$1</em>') // italic
-                .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>') // links
-                .replace(/\n/g, '<br>'); // line breaks
-                
-            return processedText;
-        }
-
-        // Helper function to escape HTML
-        function escapeHtml(unsafe) {
-            return unsafe
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-
-        // Copy code to clipboard
-        function copyCode(button) {
-            const codeBlock = button.closest('.code-block').querySelector('code');
-            const textToCopy = codeBlock.textContent;
-            
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                const originalText = button.innerHTML;
-                button.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                setTimeout(() => {
-                    button.innerHTML = originalText;
-                }, 2000);
-            }).catch(err => {
-                console.error('Failed to copy text: ', err);
-            });
-        }
-
-        // Simulate typing animation
-        function simulateTyping(element, fullText) {
-            element.innerHTML = '';
-            let i = 0;
-            const speed = 10 + Math.random() * 10;
-
-            function typeWriter() {
-                if (i < fullText.length) {
-                    const char = fullText.charAt(i);
-
-                    // Handle code blocks
-                    if (char === '`' && fullText.substring(i, i+3) === '```') {
-                        const endPos = fullText.indexOf('```', i+3);
-                        if (endPos !== -1) {
-                            const codeBlock = fullText.substring(i, endPos+3);
-                            element.innerHTML += formatMessage(codeBlock);
-                            i = endPos + 3;
-                            
-                            // Highlight the code after it's inserted
-                            setTimeout(() => {
-                                document.querySelectorAll('.code-content code').forEach(block => {
-                                    hljs.highlightElement(block);
-                                });
-                            }, 0);
-                        } else {
-                            element.innerHTML += char;
-                            i++;
-                        }
-                    } 
-                    // Handle other characters
-                    else {
-                        element.innerHTML += char;
-                        i++;
-                    }
-
-                    scrollToBottom();
-                    setTimeout(typeWriter, speed);
-                }
-            }
-
-            typeWriter();
-        }
-
-        // Handle form submission
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const prompt = promptInput.value.trim();
             if (!prompt) return;
 
-            // Add user message
             addMessage(prompt, true);
             promptInput.value = '';
             promptInput.style.height = 'auto';
 
-            // Show typing indicator
             typingIndicator.classList.add('active');
             scrollToBottom();
-
-            // Hide suggestions after first message
             suggestions.style.display = 'none';
 
             try {
@@ -701,22 +667,17 @@
                     addMessage(`Error: ${data.error}`, false, true);
                 } else {
                     addMessage(data.text);
-                    
-                    // Highlight any code blocks in the response
                     setTimeout(() => {
-                        document.querySelectorAll('.code-content code').forEach(block => {
-                            hljs.highlightElement(block);
-                        });
+                        document.querySelectorAll('.code-content code').forEach(hljs.highlightElement);
                     }, 100);
                 }
-            } catch (error) {
+            } catch (err) {
                 typingIndicator.classList.remove('active');
-                addMessage('Failed to connect to the server. Please check your network connection.', false, true);
-                console.error('Error:', error);
+                addMessage('Failed to connect to the server. Please check your network.', false, true);
+                console.error('Fetch error:', err);
             }
         });
 
-        // Add click handlers for suggestion buttons
         suggestionBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -726,13 +687,9 @@
             });
         });
 
-        // Auto-focus input on page load
         promptInput.focus();
-
-        // Initial greeting
-        setTimeout(() => {
-            addMessage("Hello! I'm your AI assistant. How can I help you today?");
-        }, 800);
+        setTimeout(() => addMessage("Hello! I'm your AI assistant. How can I help you today?"), 800);
+        hljs.highlightAll();
     </script>
 </body>
 
