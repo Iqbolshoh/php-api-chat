@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Chat Interface</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Highlight.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs2015.min.css">
     <style>
         /* ===== BASE STYLES ===== */
         :root {
@@ -19,6 +21,10 @@
             --error-color: #ef4146;
             --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
             --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --code-bg: #1e1e1e;
+            --code-text: #d4d4d4;
+            --code-border: #3c3c3c;
+            --line-numbers: #858585;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -30,6 +36,10 @@
                 --border-color: #565869;
                 --primary-color: #10a37f;
                 --primary-hover: #0d8a6d;
+                --code-bg: #1e1e1e;
+                --code-text: #d4d4d4;
+                --code-border: #3c3c3c;
+                --line-numbers: #858585;
             }
         }
 
@@ -150,6 +160,78 @@
         /* AI message specific styling */
         .message-row.ai .message-text {
             color: var(--text-primary);
+        }
+
+        /* ===== CODE BLOCK STYLES ===== */
+        .code-block {
+            position: relative;
+            margin: 12px 0;
+            background: var(--code-bg);
+            border: 1px solid var(--code-border);
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--code-text);
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.85em;
+            border-bottom: 1px solid var(--code-border);
+        }
+
+        .code-language {
+            font-weight: bold;
+        }
+
+        .copy-btn {
+            background: transparent;
+            border: none;
+            color: var(--code-text);
+            cursor: pointer;
+            font-size: 0.8em;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .copy-btn:hover {
+            opacity: 1;
+        }
+
+        .code-content {
+            overflow-x: auto;
+            padding: 12px;
+        }
+
+        .code-content pre {
+            margin: 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+            color: var(--code-text);
+        }
+
+        .code-content code {
+            display: block;
+            white-space: pre;
+        }
+
+        /* Inline code styling */
+        .message-text code:not(.hljs) {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: var(--primary-color);
         }
 
         /* ===== TYPING INDICATOR ===== */
@@ -291,25 +373,6 @@
             font-style: italic;
         }
 
-        .message-text code {
-            background: rgba(0, 0, 0, 0.1);
-            padding: 0.2em 0.4em;
-            border-radius: 3px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9em;
-        }
-
-        .message-text pre {
-            background: rgba(0, 0, 0, 0.1);
-            padding: 12px;
-            border-radius: 5px;
-            overflow-x: auto;
-            margin: 1em 0;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9em;
-            line-height: 1.5;
-        }
-
         .message-text a {
             color: var(--primary-color);
             text-decoration: underline;
@@ -435,6 +498,15 @@
         </div>
     </div>
 
+    <!-- Highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/php.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+
     <script>
         // DOM Elements
         const messageContainer = document.getElementById('messageContainer');
@@ -492,16 +564,66 @@
             }
         }
 
-        // Format message with basic markdown support
+        // Format message with markdown support including code blocks
         function formatMessage(text) {
-            // Simple markdown parsing
-            return text
+            // First process code blocks
+            let processedText = text.replace(/```(\w*)\n([\s\S]*?)```/g, function(match, language, code) {
+                // Default to plaintext if no language specified
+                if (!language) language = 'plaintext';
+                
+                // Create code block HTML
+                return `
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-language">${language}</span>
+                        <button class="copy-btn" onclick="copyCode(this)">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <div class="code-content">
+                        <pre><code class="language-${language}">${escapeHtml(code)}</code></pre>
+                    </div>
+                </div>
+                `;
+            });
+            
+            // Then process inline code
+            processedText = processedText.replace(/`([^`]+)`/g, '<code>$1</code>');
+            
+            // Process other markdown
+            processedText = processedText
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // bold
-                // .replace(/```([\s\S]*?)```/g, '<pre>$1</pre>') // code blocks
-                // .replace(/`(.*?)`/g, '<code>$1</code>') // inline code
-                // .replace(/\*(.*?)\*/g, '<em>$1</em>') // italic
+                .replace(/\*(.*?)\*/g, '<em>$1</em>') // italic
                 .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>') // links
                 .replace(/\n/g, '<br>'); // line breaks
+                
+            return processedText;
+        }
+
+        // Helper function to escape HTML
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Copy code to clipboard
+        function copyCode(button) {
+            const codeBlock = button.closest('.code-block').querySelector('code');
+            const textToCopy = codeBlock.textContent;
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
         }
 
         // Simulate typing animation
@@ -514,20 +636,27 @@
                 if (i < fullText.length) {
                     const char = fullText.charAt(i);
 
-                    // Handle markdown tags
-                    if (char === '*' || char === '`' || char === '[') {
-                        const endChar = char === '[' ? ']' : char;
-                        const endTagPos = fullText.indexOf(endChar, i + 1);
-
-                        if (endTagPos !== -1) {
-                            const tagContent = fullText.substring(i, endTagPos + 1);
-                            element.innerHTML += formatMessage(tagContent);
-                            i = endTagPos + 1;
+                    // Handle code blocks
+                    if (char === '`' && fullText.substring(i, i+3) === '```') {
+                        const endPos = fullText.indexOf('```', i+3);
+                        if (endPos !== -1) {
+                            const codeBlock = fullText.substring(i, endPos+3);
+                            element.innerHTML += formatMessage(codeBlock);
+                            i = endPos + 3;
+                            
+                            // Highlight the code after it's inserted
+                            setTimeout(() => {
+                                document.querySelectorAll('.code-content code').forEach(block => {
+                                    hljs.highlightElement(block);
+                                });
+                            }, 0);
                         } else {
                             element.innerHTML += char;
                             i++;
                         }
-                    } else {
+                    } 
+                    // Handle other characters
+                    else {
                         element.innerHTML += char;
                         i++;
                     }
@@ -572,6 +701,13 @@
                     addMessage(`Error: ${data.error}`, false, true);
                 } else {
                     addMessage(data.text);
+                    
+                    // Highlight any code blocks in the response
+                    setTimeout(() => {
+                        document.querySelectorAll('.code-content code').forEach(block => {
+                            hljs.highlightElement(block);
+                        });
+                    }, 100);
                 }
             } catch (error) {
                 typingIndicator.classList.remove('active');
