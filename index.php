@@ -6,10 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Chat Assistant</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Highlight.js CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <style>
-        /* ===== BASE STYLES ===== */
         :root {
             --primary-bg: #343541;
             --message-ai-bg: #444654;
@@ -46,7 +44,6 @@
             flex-direction: column;
         }
 
-        /* ===== CHAT CONTAINER ===== */
         .chat-container {
             display: flex;
             flex-direction: column;
@@ -57,7 +54,6 @@
             position: relative;
         }
 
-        /* ===== HEADER ===== */
         .chat-header {
             padding: 16px;
             text-align: center;
@@ -77,7 +73,6 @@
             color: var(--text-primary);
         }
 
-        /* ===== CHAT BODY ===== */
         .chat-body {
             flex: 1;
             overflow-y: auto;
@@ -91,7 +86,6 @@
             width: 100%;
         }
 
-        /* ===== MESSAGE STYLES ===== */
         .message-row {
             display: flex;
             width: 100%;
@@ -149,7 +143,6 @@
             padding-right: 40px;
         }
 
-        /* ===== CODE BLOCK STYLES ===== */
         .code-block {
             position: relative;
             margin: 16px 0;
@@ -212,7 +205,6 @@
             white-space: pre;
         }
 
-        /* Inline code styling */
         .message-text code:not(.hljs) {
             background: rgba(0, 0, 0, 0.3);
             padding: 0.2em 0.4em;
@@ -222,7 +214,6 @@
             color: #eb5f5f;
         }
 
-        /* ===== TYPING INDICATOR ===== */
         .typing-indicator {
             display: flex;
             padding: 16px;
@@ -268,7 +259,6 @@
             animation-delay: 0.4s;
         }
 
-        /* ===== CHAT FOOTER ===== */
         .chat-footer {
             padding: 16px;
             background: var(--primary-bg);
@@ -328,7 +318,6 @@
             color: var(--primary-color);
         }
 
-        /* ===== SUGGESTIONS ===== */
         .suggestions {
             display: flex;
             flex-wrap: wrap;
@@ -352,7 +341,6 @@
             background: var(--input-bg);
         }
 
-        /* ===== ERROR MESSAGE ===== */
         .error-message {
             color: var(--error-color);
             padding: 12px;
@@ -362,7 +350,6 @@
             animation: shake 0.5s ease-in-out;
         }
 
-        /* ===== TEXT FORMATTING ===== */
         .message-text strong {
             font-weight: 600;
         }
@@ -386,7 +373,6 @@
             margin-bottom: 0.5em;
         }
 
-        /* ===== ANIMATIONS ===== */
         @keyframes typingAnimation {
 
             0%,
@@ -437,7 +423,6 @@
             }
         }
 
-        /* ===== RESPONSIVE ADJUSTMENTS ===== */
         @media (max-width: 768px) {
             .message-row-center {
                 padding: 0 12px;
@@ -462,9 +447,7 @@
 
         pre code {
             white-space: pre-wrap !important;
-            /* break long lines */
             word-break: break-word !important;
-            /* prevent overflow */
             font-family: monospace !important;
         }
     </style>
@@ -476,9 +459,7 @@
             <h1>AI Assistant</h1>
         </div>
         <div class="chat-body" id="chatBody">
-            <div class="message-container" id="messageContainer">
-                <!-- Messages will be added here dynamically -->
-            </div>
+            <div class="message-container" id="messageContainer"></div>
             <div class="typing-indicator" id="typingIndicator">
                 <div class="message-avatar ai">AI</div>
                 <div class="typing-dots">
@@ -505,112 +486,95 @@
             </div>
         </div>
     </div>
-
-    <!-- Highlight.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-
     <script>
-        // DOM Elements
-        const messageContainer = document.getElementById('messageContainer');
-        const chatForm = document.getElementById('chatForm');
-        const promptInput = document.getElementById('prompt');
-        const typingIndicator = document.getElementById('typingIndicator');
-        const suggestions = document.getElementById('suggestions');
-        const suggestionBtns = document.querySelectorAll('.suggestion-btn');
+        const elements = {
+            messageContainer: document.getElementById('messageContainer'),
+            chatForm: document.getElementById('chatForm'),
+            promptInput: document.getElementById('prompt'),
+            typingIndicator: document.getElementById('typingIndicator'),
+            suggestions: document.getElementById('suggestions'),
+            chatBody: document.getElementById('chatBody')
+        };
 
-        // Auto-resize textarea
-        promptInput.addEventListener('input', () => {
-            promptInput.style.height = 'auto';
-            promptInput.style.height = `${promptInput.scrollHeight}px`;
-        });
+        const escapeHtml = text => text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
 
-        function scrollToBottom() {
-            const chatBody = document.getElementById('chatBody');
-            chatBody.scrollTop = chatBody.scrollHeight;
-        }
+        const formatMessage = text => {
+            return text
+                .replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
+                    const language = lang || 'plaintext';
+                    return `
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-language">${language}</span>
+                                <button class="copy-btn" onclick="copyCode(this)">
+                                    <i class="fas fa-copy"></i> Copy
+                                </button>
+                            </div>
+                            <pre><code class="language-${language}">${escapeHtml(code)}</code></pre>
+                        </div>`;
+                })
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+        };
 
-        function escapeHtml(unsafe) {
-            return unsafe
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/\"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
+        const scrollToBottom = () => {
+            elements.chatBody.scrollTop = elements.chatBody.scrollHeight;
+        };
 
-        function formatMessage(text) {
-            text = text.replace(/```(\w*)\n([\s\S]*?)```/g, (match, language, code) => {
-                language = language || 'plaintext';
-                const cleanedCode = escapeHtml(code);
-                return `
-        <div class="code-block">
-            <div class="code-header">
-                <span class="code-language">${language}</span>
-                <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
-            </div>
-            <pre><code class="language-${language}">${cleanedCode}</code></pre>
-        </div>`;
-            });
-
-            text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
-            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
-            text = text.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-
-            return text;
-        }
-
-        function copyCode(button) {
-            const codeBlock = button.closest('.code-block').querySelector('code');
-            navigator.clipboard.writeText(codeBlock.textContent).then(() => {
-                const originalText = button.innerHTML;
+        const copyCode = button => {
+            const code = button.closest('.code-block').querySelector('code').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const original = button.innerHTML;
                 button.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                setTimeout(() => { button.innerHTML = originalText; }, 2000);
-            }).catch(err => console.error('Copy failed: ', err));
-        }
+                setTimeout(() => { button.innerHTML = original; }, 2000);
+            }).catch(err => console.error('Copy failed:', err));
+        };
 
-        function simulateTyping(element, fullText) {
-            const formattedHTML = formatMessage(fullText);
+        const simulateTyping = (element, text) => {
+            const formatted = formatMessage(text);
             const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = formattedHTML;
+            tempDiv.innerHTML = formatted;
             const nodes = Array.from(tempDiv.childNodes);
+            let nodeIndex = 0, charIndex = 0;
 
-            let currentNodeIndex = 0;
-            let currentCharIndex = 0;
             element.innerHTML = '';
-
-            function typeNextChar() {
-                if (currentNodeIndex >= nodes.length) return;
-                const node = nodes[currentNodeIndex];
+            const typeChar = () => {
+                if (nodeIndex >= nodes.length) return;
+                const node = nodes[nodeIndex];
 
                 if (node.nodeType === Node.TEXT_NODE) {
-                    const text = node.textContent;
-                    if (currentCharIndex < text.length) {
-                        element.innerHTML += text.charAt(currentCharIndex++);
+                    if (charIndex < node.textContent.length) {
+                        element.innerHTML += node.textContent[charIndex++];
                         scrollToBottom();
-                        setTimeout(typeNextChar, 10 + Math.random() * 10);
+                        setTimeout(typeChar, 10 + Math.random() * 10);
                     } else {
-                        element.innerHTML += '<br>'; // 👈 qo‘shamiz shu yerda
-                        currentNodeIndex++;
-                        currentCharIndex = 0;
-                        typeNextChar();
+                        nodeIndex++;
+                        charIndex = 0;
+                        typeChar();
                     }
                 } else {
                     element.appendChild(node.cloneNode(true));
-                    currentNodeIndex++;
-                    currentCharIndex = 0;
+                    nodeIndex++;
+                    charIndex = 0;
                     setTimeout(() => {
                         hljs.highlightAll();
                         scrollToBottom();
-                        typeNextChar();
+                        typeChar();
                     }, 20);
                 }
-            }
+            };
+            typeChar();
+        };
 
-            typeNextChar();
-        }
-
-        function addMessage(content, isUser = false, isError = false) {
+        const addMessage = (content, isUser = false, isError = false) => {
             const messageRow = document.createElement('div');
             messageRow.className = `message-row ${isUser ? 'user' : 'ai'}`;
 
@@ -623,41 +587,33 @@
 
             const contentDiv = document.createElement('div');
             contentDiv.className = 'message-content';
+
             const textDiv = document.createElement('div');
-            textDiv.className = 'message-text';
+            textDiv.className = `message-text ${isError ? 'error-message' : ''}`;
 
-            if (isError) {
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'error-message';
-                errorDiv.textContent = content;
-                contentDiv.appendChild(errorDiv);
-            } else {
-                textDiv.innerHTML = formatMessage(content);
-                contentDiv.appendChild(textDiv);
-            }
+            textDiv[isError ? 'textContent' : 'innerHTML'] = isError ? content : formatMessage(content);
 
+            contentDiv.appendChild(textDiv);
             center.appendChild(avatar);
             center.appendChild(contentDiv);
             messageRow.appendChild(center);
-            messageContainer.appendChild(messageRow);
+            elements.messageContainer.appendChild(messageRow);
 
             scrollToBottom();
-
             if (!isError && !isUser) simulateTyping(textDiv, content);
-        }
+        };
 
-        chatForm.addEventListener('submit', async (e) => {
+        const handleSubmit = async e => {
             e.preventDefault();
-            const prompt = promptInput.value.trim();
+            const prompt = elements.promptInput.value.trim();
             if (!prompt) return;
 
             addMessage(prompt, true);
-            promptInput.value = '';
-            promptInput.style.height = 'auto';
-
-            typingIndicator.classList.add('active');
+            elements.promptInput.value = '';
+            elements.promptInput.style.height = 'auto';
+            elements.typingIndicator.classList.add('active');
+            elements.suggestions.style.display = 'none';
             scrollToBottom();
-            suggestions.style.display = 'none';
 
             try {
                 const response = await fetch('process.php', {
@@ -665,37 +621,42 @@
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: `prompt=${encodeURIComponent(prompt)}`
                 });
-
                 const data = await response.json();
-                typingIndicator.classList.remove('active');
+                elements.typingIndicator.classList.remove('active');
 
-                if (data.error) {
-                    addMessage(`Error: ${data.error}`, false, true);
-                } else {
-                    addMessage(data.text);
-                    setTimeout(() => {
-                        document.querySelectorAll('.code-content code').forEach(hljs.highlightElement);
-                    }, 100);
+                addMessage(data.error || data.text, false, !!data.error);
+                if (!data.error) {
+                    setTimeout(() => document.querySelectorAll('.code-content code').forEach(hljs.highlightElement), 100);
                 }
             } catch (err) {
-                typingIndicator.classList.remove('active');
+                elements.typingIndicator.classList.remove('active');
                 addMessage('Failed to connect to the server. Please check your network.', false, true);
                 console.error('Fetch error:', err);
             }
-        });
+        };
 
-        suggestionBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                promptInput.value = btn.textContent;
-                promptInput.focus();
-                promptInput.dispatchEvent(new Event('input'));
+        const init = () => {
+            elements.promptInput.addEventListener('input', () => {
+                elements.promptInput.style.height = 'auto';
+                elements.promptInput.style.height = `${elements.promptInput.scrollHeight}px`;
             });
-        });
 
-        promptInput.focus();
-        setTimeout(() => addMessage("Hello! I'm your AI assistant. How can I help you today?"), 800);
-        hljs.highlightAll();
+            elements.chatForm.addEventListener('submit', handleSubmit);
+
+            document.querySelectorAll('.suggestion-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    elements.promptInput.value = btn.textContent;
+                    elements.promptInput.focus();
+                    elements.promptInput.dispatchEvent(new Event('input'));
+                });
+            });
+
+            elements.promptInput.focus();
+            setTimeout(() => addMessage("Hello! I'm your AI assistant. How can I help you today?"), 800);
+            hljs.highlightAll();
+        };
+
+        init();
     </script>
 </body>
 
