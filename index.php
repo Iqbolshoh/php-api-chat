@@ -517,29 +517,50 @@
         .code-box {
             position: relative;
             background: #1e1e1e;
-            border-radius: 6px;
             overflow: auto;
+            border-radius: 6px;
             box-shadow: 0 0 8px #0008;
         }
 
         pre {
             margin: 0;
-            padding: 1.2rem 1rem 1.2rem 3.5rem;
-            white-space: pre-wrap;
+            white-space: pre-wrap !important;
         }
 
-        .lines {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 2.5rem;
-            background: #252526;
-            color: #888;
-            text-align: right;
-            padding: 1.2rem 0.3rem;
-            font-size: 0.9rem;
-            line-height: 1.5;
-            user-select: none;
+        .chat-item i.fas {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            transition: all var(--transition-fast);
+        }
+
+        .chat-item:hover i.fas.fa-comment {
+            color: var(--primary-color);
+            transform: scale(1.1);
+        }
+
+        .delete-chat {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: var(--space-xs);
+            margin-left: auto;
+            opacity: 0;
+            transition: all var(--transition-fast);
+        }
+
+        .chat-item:hover .delete-chat {
+            opacity: 1;
+        }
+
+        .delete-chat i.fas.fa-trash {
+            font-size: 0.6875rem;
+            transition: all var(--transition-fast);
+        }
+
+        .delete-chat:hover i.fas.fa-trash {
+            color: var(--error-color);
+            transform: scale(1.2);
         }
 
         /* Animations */
@@ -991,7 +1012,6 @@
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\*(.*?)\*/g, '<em>$1</em>')
             .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
-            .replace(/\n/g, '<br>');
 
         // Scroll to bottom
         const scrollToBottom = () => {
