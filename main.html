@@ -4,61 +4,52 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>VS Code Styled Code Display</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs2015.min.css" />
+    <title>Code Viewer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs2015.min.css">
     <style>
         body {
-            background-color: #1e1e1e;
-            color: #d4d4d4;
-            font-family: 'Consolas', 'Courier New', monospace;
             margin: 0;
-            padding: 40px 20px;
+            padding: 2rem;
+            background: #121212;
+            color: #ccc;
+            font-family: sans-serif;
         }
 
-        .code-container {
+        .code-box {
             position: relative;
-            max-width: 900px;
-            margin: 0 auto;
-            background-color: #1e1e1e;
-            border: 1px solid #3c3c3c;
+            background: #1e1e1e;
             border-radius: 6px;
             overflow: auto;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 8px #0008;
         }
 
         pre {
             margin: 0;
-            padding-left: 60px;
-            padding-right: 20px;
-            padding-top: 20px;
-            padding-bottom: 20px;
+            padding: 1.2rem 1rem 1.2rem 3.5rem;
+            white-space: pre-wrap;
         }
 
-        .line-numbers {
+        .lines {
             position: absolute;
             top: 0;
             left: 0;
-            width: 50px;
-            background-color: #252526;
-            color: #858585;
+            width: 2.5rem;
+            background: #252526;
+            color: #888;
             text-align: right;
-            padding: 20px 5px;
-            border-right: 1px solid #3c3c3c;
-            user-select: none;
-        }
-
-        .line-numbers span {
-            display: block;
+            padding: 1.2rem 0.3rem;
+            font-size: 0.9rem;
             line-height: 1.5;
-            font-size: 14px;
+            user-select: none;
         }
     </style>
 </head>
 
 <body>
-    <div class="code-container">
-        <div class="line-numbers" id="lineNumbers"></div>
-        <pre><code id="codeBlock" class="language-cpp">
+
+    <div class="code-box">
+        <div class="lines" id="lines"></div>
+        <pre><code id="code" class="language-cpp">
 // Example C++ Code
 #include <iostream>
 using namespace std;
@@ -70,21 +61,13 @@ int main() {
     </code></pre>
     </div>
 
-    <!-- Highlight.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script>
         hljs.highlightAll();
-
-        const code = document.getElementById("codeBlock").textContent;
-        const lines = code.split('\n').length;
-        const lineNumberContainer = document.getElementById("lineNumbers");
-
-        for (let i = 1; i <= lines; i++) {
-            const line = document.createElement("span");
-            line.textContent = i;
-            lineNumberContainer.appendChild(line);
-        }
+        const codeLines = document.getElementById("code").innerText.trim().split('\n');
+        document.getElementById("lines").innerHTML = codeLines.map((_, i) => i + 1).join('<br>');
     </script>
+
 </body>
 
 </html>
