@@ -910,6 +910,31 @@
                     els.sidebar.classList.remove('open');
                 }
             });
+
+            // Create default chat if none exists
+            if (chats.length === 0) {
+                createDefaultChat();
+            }
+        }
+
+        function createDefaultChat() {
+            currentChatId = Date.now().toString();
+            chats = [{
+                id: currentChatId,
+                title: 'Welcome Chat',
+                messages: [
+                    {
+                        content: "Hello! I'm your AI assistant. How can I help you today?",
+                        isUser: false,
+                        isError: false
+                    }
+                ],
+                createdAt: new Date().toISOString()
+            }];
+            saveChats();
+            renderChatHistory();
+            renderMessages(chats[0].messages);
+            els.suggestions.style.display = 'block';
         }
 
         // Create new chat
